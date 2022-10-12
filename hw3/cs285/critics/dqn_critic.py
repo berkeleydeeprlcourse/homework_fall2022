@@ -3,6 +3,7 @@ import torch
 import torch.optim as optim
 from torch.nn import utils
 from torch import nn
+import numpy as np
 
 from cs285.infrastructure import pytorch_util as ptu
 
@@ -66,7 +67,7 @@ class DQNCritic(BaseCritic):
         q_t_values = torch.gather(qa_t_values, 1, ac_na.unsqueeze(1)).squeeze(1)
         
         # TODO compute the Q-values from the target network 
-        qa_tp1_values = self.q_net(next_ob_no)
+        qa_tp1_values = self.q_net_target(next_ob_no)
 
         if self.double_q:
             # You must fill this part for Q2 of the Q-learning portion of the homework.
@@ -74,7 +75,16 @@ class DQNCritic(BaseCritic):
             # is being updated, but the Q-value for this action is obtained from the
             # target Q-network. Please review Lecture 8 for more details,
             # and page 4 of https://arxiv.org/pdf/1509.06461.pdf is also a good reference.
-            TODO
+            # best_action = np.argmax(self.q_net(ob_no))
+            best_action = torch.argmax(self.q_net(ob_no), dim=1).unsqueeze(1)
+            q_tp1 = torch.gather(self.q_net_target(ob_no), 1, best_action).squeeze(1)
+            # print(best_action, best_action.shape)
+            # print(self.q_net_target(ob_no).shape)
+            # print("Heres", q_tp1)
+            # print("op", self.q_net(ob_no), self.q_net(ob_no).shape, torch.argmax(self.q_net(ob_no), dim=1))
+            # q_tp1 = self.q_net_target(ob_no)[best_action]
+            # q_tp1 = self.q_net_target(next_ob_no).max(-1)
+
         else:
             q_tp1, _ = qa_tp1_values.max(dim=1)
 
