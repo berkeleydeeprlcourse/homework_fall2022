@@ -10,6 +10,7 @@ import gym
 from cs285.policies.sac_policy import MLPPolicySAC
 from cs285.critics.sac_critic import SACCritic
 import cs285.infrastructure.pytorch_util as ptu
+from cs285.infrastructure.sac_utils import soft_update_params
 
 class SACAgent(BaseAgent):
     def __init__(self, env: gym.Env, agent_params):
@@ -50,8 +51,23 @@ class SACAgent(BaseAgent):
         # 1. Compute the target Q value. 
         # HINT: You need to use the entropy term (alpha)
         # 2. Get current Q estimates and calculate critic loss
-        # 3. Optimize the critic  
-        return critic_loss
+        # 3. Optimize the critic
+        q1, q2 = self.critic(next_ob_no)
+
+        pred_action = self.actor(next_ob_no)
+
+        target = re_n + self.gamma*(1-terminal_n)*(min(q1, q2)- ______*red_action.log_prob(ac_na))
+
+        q1loss = self.critic.loss(self.critic.Q1(ob_no), target)
+        q2loss = self.critic.loss(self.critic.Q2(ob_no), target)
+
+        q_loss = q1loss + q2loss
+
+        self.critic.optimizer.zero_grad()
+        q_loss.backward()
+        self.critic.optimizer.step()
+
+        return q_loss
 
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
         # TODO 
@@ -67,11 +83,25 @@ class SACAgent(BaseAgent):
         #     update the actor
 
         # 4. gather losses for logging
+        ob_no = ptu.from_numpy(ob_no)
+        next_ob_no = ptu.from_numpy(next_ob_no)
+        ac_na = ptu.from_numpy(ac_na)
+        re_n = ptu.from_numpy(re_n)
+        terminal_n = ptu.from_numpy(terminal_n)
+
+        for _ in range(self.agent_params['num_critic_updates_per_agent_update']):
+            critic_loss = self.update_critic(ob_no, ac_na, next_ob_no, re_n, terminal_n)
+
+        soft_update_params(self.critic, self.critic_target)
+
+        for _ in range(self.agent_params['num_actor_updates_per_agent_update']):
+            actor_loss, alpha_loss, temperature = self.actor.update(ob_no, ac_na)
+
         loss = OrderedDict()
-        loss['Critic_Loss'] = TODO
-        loss['Actor_Loss'] = TODO
-        loss['Alpha_Loss'] = TODO
-        loss['Temperature'] = TODO
+        loss['Critic_Loss'] = critic_loss
+        loss['Actor_Loss'] = actor_loss
+        loss['Alpha_Loss'] = alpha_loss
+        loss['Temperature'] = temperature
 
         return loss
 

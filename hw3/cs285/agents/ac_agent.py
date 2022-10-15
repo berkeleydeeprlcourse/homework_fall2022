@@ -72,7 +72,7 @@ class ACAgent(BaseAgent):
         V1 = self.critic(ob_no)
         V2 = self.critic(next_ob_no)
 
-        q_value = re_n + self.gamma*V2*terminal_n
+        q_value = re_n + self.gamma*V2*(1-terminal_n)
         adv_n = q_value - V1
 
         # print("Advantage", np.mean(adv_n))
