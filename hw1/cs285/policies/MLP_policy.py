@@ -81,7 +81,11 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs[None]
 
         # TODO return the action that the policy prescribes
-        raise NotImplementedError
+        with torch.no_grad():
+            observation = ptu.from_numpy(observation)
+            actions = self(observation).sample()
+
+        return ptu.to_numpy(actions)
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
@@ -93,7 +97,10 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # return more flexible objects, such as a
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
-        raise NotImplementedError
+        if self.discrete:
+            return distributions.Categorical(self.logits_na(observation))
+        else:
+            return distributions.Normal(self.mean_net(observation), self.logstd.exp())
 
 
 #####################################################
@@ -109,7 +116,28 @@ class MLPPolicySL(MLPPolicy):
             adv_n=None, acs_labels_na=None, qvals=None
     ):
         # TODO: update the policy and return the loss
-        loss = TODO
+        actions = ptu.from_numpy(actions)
+        observations = ptu.from_numpy(observations)
+
+        dist = self(observations)
+
+        if self.discrete:
+            # using sample cause no grad error
+            # We need to use reparameterazation trick
+            loss = self.loss(dist.rsample(), actions)
+        else:
+            # habanoz: Cross-entropy loss, or log loss, measures the performance of a classification model
+            # whose output is a probability value between 0 and 1
+            # However, using cross-entropy loss produces some weird loss value which is hard to evaluate
+            # loss = -dist.log_prob(actions).sum()
+
+            # Stick to MSE Loss because of the weird log loss
+            loss = self.loss(dist.rsample(), actions)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
         return {
             # You can add extra logging information here, but keep this line
             'Training Loss': ptu.to_numpy(loss),

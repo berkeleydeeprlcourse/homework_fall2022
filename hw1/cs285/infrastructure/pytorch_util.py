@@ -5,7 +5,6 @@ from torch import nn
 
 Activation = Union[str, nn.Module]
 
-
 _str_to_activation = {
     'relu': nn.ReLU(),
     'tanh': nn.Tanh(),
@@ -47,7 +46,17 @@ def build_mlp(
 
     # TODO: return a MLP. This should be an instance of nn.Module
     # Note: nn.Sequential is an instance of nn.Module.
-    raise NotImplementedError
+
+    layers = [nn.Linear(input_size, size), activation]
+
+    for _ in range(n_layers):
+        layers.append(nn.Linear(size, size))
+        layers.append(activation)
+
+    layers.append(nn.Linear(size, output_size))
+    layers.append(output_activation)
+
+    return nn.Sequential(*layers).to(device)
 
 
 device = None
