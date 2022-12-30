@@ -88,6 +88,18 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     def get_action(self, obs: np.ndarray) -> np.ndarray:
         # TODO: get this from HW1
 
+        if len(obs.shape) > 1:
+            observation = obs
+        else:
+            observation = obs[None]
+
+        # TODO return the action that the policy prescribes
+        with torch.no_grad():
+            observation = ptu.from_numpy(observation)
+            actions = self(observation).sample()
+
+        return ptu.to_numpy(actions)
+
     # update/train this policy
     def update(self, observations, actions, **kwargs):
         raise NotImplementedError
