@@ -60,7 +60,7 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
     # TODO: get this from hw1
 
     # initialize env for the beginning of a new rollout
-    ob = env.reset()
+    ob,_ = env.reset()
 
     # init vars
     obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []

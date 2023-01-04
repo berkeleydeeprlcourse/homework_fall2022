@@ -55,9 +55,9 @@ class RL_Trainer(object):
             render_mode = None
         else:
             render_mode = 'rgb_array'
-        self.env = gym.make(self.params['env_name'], render_mode=render_mode, new_step_api=True)
-        if seed is not None:
-            self.env.seed(seed)
+        self.env = gym.make(self.params['env_name'], render_mode=render_mode)
+        #if seed is not None:
+            #self.env.seed(seed)
 
         # Add noise wrapper
         if params['action_noise_std'] > 0:
