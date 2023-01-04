@@ -1,4 +1,4 @@
-My answers to Assignments for Berkeley CS 285: Deep Reinforcement Learning (Fall 2022) 
+My (A self learner's) answers to Assignments for Berkeley CS 285: Deep Reinforcement Learning (Fall 2022) 
 
 ___
 
