@@ -133,8 +133,7 @@ class PGAgent(BaseAgent):
 
             else:
                 ## TODO: compute advantage estimates using q_values, and values as baselines
-                # advantages = TODO
-                raise Exception("not completed")
+                advantages = q_values - values
 
         # Else, just set the advantage to [Q]
         else:
