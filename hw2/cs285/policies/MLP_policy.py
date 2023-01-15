@@ -172,7 +172,7 @@ class MLPPolicyPG(MLPPolicy):
             q_values = (q_values - q_val_mean) / q_val_std
 
             q_values = ptu.from_numpy(q_values)
-            baseline_loss = self.baseline_loss(self.baseline(observations), q_values)
+            baseline_loss = self.baseline_loss(self.baseline(observations).squeeze(), q_values)
 
             self.baseline_optimizer.zero_grad()
             baseline_loss.backward()
