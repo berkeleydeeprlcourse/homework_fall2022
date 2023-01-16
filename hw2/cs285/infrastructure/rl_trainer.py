@@ -56,8 +56,8 @@ class RL_Trainer(object):
         else:
             render_mode = 'rgb_array'
         self.env = gym.make(self.params['env_name'], render_mode=render_mode, new_step_api=True)
-        #if seed is not None:
-            #self.env.seed(seed)
+        # if seed is not None:
+        # self.env.seed(seed)
 
         # Add noise wrapper
         if params['action_noise_std'] > 0:
@@ -153,6 +153,7 @@ class RL_Trainer(object):
                 training_returns = self.collect_training_trajectories(itr,
                                                                       initial_expertdata, collect_policy,
                                                                       self.params['batch_size'])
+
                 paths, envsteps_this_batch, train_video_paths = training_returns
                 self.total_envsteps += envsteps_this_batch
 
@@ -205,7 +206,9 @@ class RL_Trainer(object):
         # HINT1: use sample_trajectories from utils
         # HINT2: you want each of these collected rollouts to be of length self.params['ep_len']
         print("\nCollecting data to be used for training...")
+        t0 = time.time()
         paths, envsteps_this_batch = sample_trajectories(self.env, collect_policy, batch_size, self.params['ep_len'])
+        print(f"\nCollected data to be used for training in {time.time() - t0} s")
 
         # collect more rollouts with the same policy, to be saved as videos in tensorboard
         # note: here, we collect MAX_NVIDEO rollouts, each of length MAX_VIDEO_LEN
@@ -264,6 +267,7 @@ class RL_Trainer(object):
             # returns, for logging
             train_returns = [path["reward"].sum() for path in paths]
             eval_returns = [eval_path["reward"].sum() for eval_path in eval_paths]
+
 
             # episode lengths, for logging
             train_ep_lens = [len(path["reward"]) for path in paths]
