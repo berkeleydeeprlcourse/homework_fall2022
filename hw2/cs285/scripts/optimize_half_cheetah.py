@@ -118,6 +118,8 @@ def optimize():
     # Write report
     study.trials_dataframe().to_csv("study_results_a2c_cartpole.csv")
 
+    print(study.best_params)
+
     fig1 = plot_optimization_history(study)
     fig2 = plot_param_importances(study)
 
