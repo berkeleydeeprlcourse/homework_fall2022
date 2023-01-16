@@ -3,23 +3,24 @@ import warnings
 import numpy as np
 import time
 import copy
+import matplotlib.pyplot as plt
+
 
 ############################################
 ############################################
 
 def calculate_mean_prediction_error(env, action_sequence, models, data_statistics):
-
     model = models[0]
 
     # true
     true_states = perform_actions(env, action_sequence)['observation']
 
     # predicted
-    ob = np.expand_dims(true_states[0],0)
+    ob = np.expand_dims(true_states[0], 0)
     pred_states = []
     for ac in action_sequence:
         pred_states.append(ob)
-        action = np.expand_dims(ac,0)
+        action = np.expand_dims(ac, 0)
         ob = model.get_prediction(ob, action, data_statistics)
     pred_states = np.squeeze(pred_states)
 
@@ -27,6 +28,7 @@ def calculate_mean_prediction_error(env, action_sequence, models, data_statistic
     mpe = mean_squared_error(pred_states, true_states)
 
     return mpe, true_states, pred_states
+
 
 def perform_actions(env, actions):
     ob = env.reset()
@@ -50,13 +52,16 @@ def perform_actions(env, actions):
 
     return Path(obs, image_obs, acs, rewards, next_obs, terminals)
 
+
 def mean_squared_error(a, b):
-    return np.mean((a-b)**2)
+    return np.mean((a - b) ** 2)
+
 
 ############################################
 ############################################
 
-def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('rgb_array')):
+def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('rgb_array'), times=None, times2=None,
+                      timesp=None):
     # TODO: get this from hw1
 
     # initialize env for the beginning of a new rollout
@@ -64,7 +69,10 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
 
     # init vars
     obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
+
     steps = 0
+
+    t0 = time.time()
     while True:
 
         # render image of the simulated env
@@ -76,14 +84,24 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
 
         # use the most recent ob to decide what to do
         obs.append(ob)
+        tp = time.time()
         ac = policy.get_action(ob)
+        if timesp is not None:
+            timesp.append(time.time() - tp)
+
         ac = ac[0]
         acs.append(ac)
+
+        t2 = time.time()
 
         # take that action and record results
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+
             ob, rew, done, truncated, _ = env.step(ac)
+
+        if times2 is not None:
+            times2.append(time.time() - t2)
 
         # record result of taking that action
         steps += 1
@@ -98,7 +116,11 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
         if rollout_done:
             break
 
+    if times is not None:
+        times.append(time.time() - t0)
+
     return Path(obs, image_obs, acs, rewards, next_obs, terminals)
+
 
 def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, render=False, render_mode=('rgb_array')):
     # TODO: get this from hw1
@@ -110,14 +132,23 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
             Hint1: use sample_trajectory to get each path (i.e. rollout) that goes into paths
             Hint2: use get_pathlength to count the timesteps collected in each path
         """
+    total_t = 0
     timesteps_this_batch = 0
+    times = []
+    times2 = []
+    timesp = []
     paths = []
     while timesteps_this_batch < min_timesteps_per_batch:
-        path = sample_trajectory(env, policy, max_path_length, render)
+        t0 = time.time()
+        path = sample_trajectory(env, policy, max_path_length, render, times=times, times2=times2, timesp=timesp)
+        t1 = time.time()
+        total_t += t1 - t0
+
         paths.append(path)
         timesteps_this_batch += get_pathlength(path)
-
+    print(f"{total_t} seconds ")
     return paths, timesteps_this_batch
+
 
 def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, render_mode=('rgb_array')):
     # TODO: get this from hw1
@@ -131,6 +162,7 @@ def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, ren
 
     return [sample_trajectory(env, policy, max_path_length, render) for _ in range(ntraj)]
 
+
 ############################################
 ############################################
 
@@ -141,10 +173,10 @@ def Path(obs, image_obs, acs, rewards, next_obs, terminals):
     """
     if image_obs != []:
         image_obs = np.stack(image_obs, axis=0)
-    return {"observation" : np.array(obs, dtype=np.float32),
-            "image_obs" : np.array(image_obs, dtype=np.uint8),
-            "reward" : np.array(rewards, dtype=np.float32),
-            "action" : np.array(acs, dtype=np.float32),
+    return {"observation": np.array(obs, dtype=np.float32),
+            "image_obs": np.array(image_obs, dtype=np.uint8),
+            "reward": np.array(rewards, dtype=np.float32),
+            "action": np.array(acs, dtype=np.float32),
             "next_observation": np.array(next_obs, dtype=np.float32),
             "terminal": np.array(terminals, dtype=np.float32)}
 
@@ -163,31 +195,34 @@ def convert_listofrollouts(paths):
     unconcatenated_rewards = [path["reward"] for path in paths]
     return observations, actions, next_observations, terminals, concatenated_rewards, unconcatenated_rewards
 
+
 ############################################
 ############################################
 
 def get_pathlength(path):
     return len(path["reward"])
 
+
 def normalize(data, mean, std, eps=1e-8):
-    return (data-mean)/(std+eps)
+    return (data - mean) / (std + eps)
+
 
 def unnormalize(data, mean, std):
-    return data*std+mean
+    return data * std + mean
+
 
 def add_noise(data_inp, noiseToSignal=0.01):
+    data = copy.deepcopy(data_inp)  # (num data points, dim)
 
-    data = copy.deepcopy(data_inp) #(num data points, dim)
-
-    #mean of data
+    # mean of data
     mean_data = np.mean(data, axis=0)
 
-    #if mean is 0,
-    #make it 0.001 to avoid 0 issues later for dividing by std
+    # if mean is 0,
+    # make it 0.001 to avoid 0 issues later for dividing by std
     mean_data[mean_data == 0] = 0.000001
 
-    #width of normal distribution to sample noise from
-    #larger magnitude number = could have larger magnitude noise
+    # width of normal distribution to sample noise from
+    # larger magnitude number = could have larger magnitude noise
     std_of_noise = mean_data * noiseToSignal
     for j in range(mean_data.shape[0]):
         data[:, j] = np.copy(data[:, j] + np.random.normal(
