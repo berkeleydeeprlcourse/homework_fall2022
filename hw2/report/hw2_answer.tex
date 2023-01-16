@@ -53,4 +53,32 @@
     \hspace*{-0.5in}
     \includegraphics[scale=0.35]{q3/q3_b40000_r0.005_mean_rewards}
 
+    \subsection{Experiment 4}
+
+    A trial and error search is run on hyperparameter space.
+    Learning rate 0.02 and batch size 50K are found to be best performing.
+
+    \hspace*{-0.75in}
+    \includegraphics[scale=0.35]{q4/q4_parameter_comparison}
+
+    The chart above shows evaluation results by iteration for different parameter sets.
+
+    Bigger batch size is better.
+    It reduces variance and speeds up learning.
+
+    Bigger learning rate is better.
+    It speeds up learning.
+    If learning rate is too large, it may cause converging to a local minimum or divergence.
+
+    While doing trial and error, largest possible values are selected at first.
+    Then a smaller learning rate configuration is tested.
+    Then a smaller batch size configuration is tested.
+    Both configurations are found to perform worse than the first test.
+
+    \hspace*{-0.75in}
+    \includegraphics[scale=0.35]{q4/q4_rtg_baseline_comparison}
+
+    The chart above shows performance for different reward-to-go and baseline parameter configurations.
+    Reward-to-go always performs better.
+
 \end{document}
