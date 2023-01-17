@@ -117,19 +117,17 @@ class PGAgent(BaseAgent):
                 advantages = np.zeros(batch_size + 1)
 
                 for i in reversed(range(batch_size)):
-                    for t in range(obs.shape[1], -1, -1):
-                        delta = rews[t] + (self.gamma * values[i, t + 1] if terminals[i, t] == 0 else 0) - values[i, t]
-                        advantages[i] = delta + self.gamma * self.gae_lambda * advantages[i + 1]
+                    ## TODO: recursively compute advantage estimates starting from
+                    ## timestep T.
+                    ## HINT: use terminals to handle edge cases. terminals[i]
+                    ## is 1 if the state is the last in its trajectory, and
+                    ## 0 otherwise.
 
-                ## TODO: recursively compute advantage estimates starting from
-                ## timestep T.
-                ## HINT: use terminals to handle edge cases. terminals[i]
-                ## is 1 if the state is the last in its trajectory, and
-                ## 0 otherwise.
+                    delta = rews[i] + (0.0 if terminals[i] == 1 else self.gamma * values[i + 1]) - values[i]
+                    advantages[i] = delta + self.gae_lambda * self.gamma * advantages[i + 1]
 
                 # remove dummy advantage
                 advantages = advantages[:-1]
-                raise Exception("not completed")
 
             else:
                 ## TODO: compute advantage estimates using q_values, and values as baselines

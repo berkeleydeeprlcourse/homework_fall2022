@@ -83,4 +83,29 @@
     However, the one with baseline was expected to perform better with less variance which seems not to be the case.
     It is not clear whether this is bacause of random initialization or implementation issues.
 
+
+    \subsection{Experiment 5}
+
+    First chart shows lambda 1.0 and vanilla neural network baseline estimator.
+    Noise parameter is not added to the vanilla estimator.
+    They are somewhat similar which is expected.
+
+    \hspace*{-0.75in}
+    \includegraphics[scale=0.35]{q5/q5_lambda1_vs_vanilla}
+
+    The following chart shows learning curves for different lambda values.
+
+    \hspace*{-0.75in}
+    \includegraphics[scale=0.35]{q5/q5_lambda_compare}
+
+    As lambda moves away from 1, variance grows.
+    The best performance is obtained when the lambda is set to 1.0.
+    The second best is lambda 0.99.
+    lambda value 0.99 learns faster, it reaches the target mean reward more quickly.
+    However, it fluctuates a lot when compared to lambda value 1.0.
+
+    The lower the lambda parameter, the algorithm cares less about the future and this behaviour adds to variance.
+    When lambda is zero, the algorithm onl cares about the current step value.
+    In this case the performance is the worst.
+    When lambda is set to 1, the algorithm cares about future rewards as much as the current reward and the performance is the best.
 \end{document}
