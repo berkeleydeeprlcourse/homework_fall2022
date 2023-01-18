@@ -57,6 +57,64 @@ def mean_squared_error(a, b):
 def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('rgb_array')):
     # TODO: get this from hw1 or hw2
 
+
+    # initialize env for the beginning of a new rollout
+    ob = env.reset()
+
+    # init vars
+    obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
+
+    steps = 0
+
+    t0 = time.time()
+    while True:
+
+        # render image of the simulated env
+        if render:
+            if hasattr(env, 'sim'):
+                image_obs.append(env.sim.render(camera_name='track', height=500, width=500)[::-1])
+            else:
+                image_obs.append(env.render())
+
+        # use the most recent ob to decide what to do
+        obs.append(ob)
+        tp = time.time()
+        ac = policy.get_action(ob)
+        if timesp is not None:
+            timesp.append(time.time() - tp)
+
+        ac = ac[0]
+        acs.append(ac)
+
+        t2 = time.time()
+
+        # take that action and record results
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+
+            ob, rew, done, truncated, _ = env.step(ac)
+
+        if times2 is not None:
+            times2.append(time.time() - t2)
+
+        # record result of taking that action
+        steps += 1
+        next_obs.append(ob)
+        rewards.append(rew)
+
+        # TODO end the rollout if the rollout ended
+        # HINT: rollout can end due to done, or due to max_path_length
+        rollout_done = int(done or truncated or steps >= max_path_length)  # HINT: this is either 0 or 1
+        terminals.append(rollout_done)
+
+        if rollout_done:
+            break
+
+    if times is not None:
+        times.append(time.time() - t0)
+
+    return Path(obs, image_obs, acs, rewards, next_obs, terminals)
+
 def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, render=False, render_mode=('rgb_array')):
     """
         Collect rollouts using policy
@@ -64,6 +122,21 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
     """
     # TODO: get this from hw1 or hw2
 
+    total_t = 0
+    timesteps_this_batch = 0
+    times = []
+    times2 = []
+    timesp = []
+    paths = []
+    while timesteps_this_batch < min_timesteps_per_batch:
+        t0 = time.time()
+        path = sample_trajectory(env, policy, max_path_length, render, times=times, times2=times2, timesp=timesp)
+        t1 = time.time()
+        total_t += t1 - t0
+
+        paths.append(path)
+        timesteps_this_batch += get_pathlength(path)
+    print(f"{total_t} seconds ")
     return paths, timesteps_this_batch
 
 def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, render_mode=('rgb_array')):
@@ -72,7 +145,7 @@ def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, ren
     """
     # TODO: get this from hw1 or hw2
 
-    return paths
+    return [sample_trajectory(env, policy, max_path_length, render) for _ in range(ntraj)]
 
 ############################################
 ############################################
