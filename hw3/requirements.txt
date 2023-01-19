@@ -12,3 +12,5 @@ ipdb==0.13.9
 swig==4.0.2
 box2d-py==2.3.8
 pyglet==1.5.26
+gym[atari]
+gym[accept-rom-license]

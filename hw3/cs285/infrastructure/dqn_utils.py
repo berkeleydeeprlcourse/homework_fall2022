@@ -485,7 +485,7 @@ class MemoryOptimizedReplayBuffer(object):
             self.obs      = np.empty([self.size] + list(frame.shape), dtype=np.float32 if self.lander else np.uint8)
             self.action   = np.empty([self.size],                     dtype=np.int32)
             self.reward   = np.empty([self.size],                     dtype=np.float32)
-            self.done     = np.empty([self.size],                     dtype=np.bool)
+            self.done     = np.empty([self.size],                     dtype=bool)
         self.obs[self.next_idx] = frame
 
         ret = self.next_idx
