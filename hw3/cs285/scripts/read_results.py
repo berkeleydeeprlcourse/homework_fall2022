@@ -1,5 +1,5 @@
 import glob
-import tensorflow as tf
+from tensorflow.python.summary.summary_iterator import summary_iterator
 
 def get_section_results(file):
     """
@@ -7,18 +7,18 @@ def get_section_results(file):
     """
     X = []
     Y = []
-    for e in tf.train.summary_iterator(file):
+    for e in summary_iterator(file):
         for v in e.summary.value:
             if v.tag == 'Train_EnvstepsSoFar':
                 X.append(v.simple_value)
-            elif v.tag == 'Eval_AverageReturn':
+            elif v.tag == 'Train_AverageReturn':
                 Y.append(v.simple_value)
     return X, Y
 
 if __name__ == '__main__':
     import glob
 
-    logdir = 'data/q1_lb_rtg_na_CartPole-v0_27-09-2021_01-03-36/events*'
+    logdir = 'data/q2_doubledqn_1_LunarLander-v3*/events*'
     eventfile = glob.glob(logdir)[0]
 
     X, Y = get_section_results(eventfile)
