@@ -1,5 +1,5 @@
 from collections import OrderedDict
-
+from cs285.infrastructure import pytorch_util as ptu
 from cs285.critics.bootstrapped_continuous_critic import \
     BootstrappedContinuousCritic
 from cs285.infrastructure.replay_buffer import ReplayBuffer
@@ -63,8 +63,15 @@ class ACAgent(BaseAgent):
         # 3) estimate the Q value as Q(s, a) = r(s, a) + gamma*V(s')
         # HINT: Remember to cut off the V(s') term (ie set it to 0) at terminal states (ie terminal_n=1)
         # 4) calculate advantage (adv_n) as A(s, a) = Q(s, a) - V(s)
+
+        ob_no = ptu.from_numpy(ob_no)
+        next_ob_no = ptu.from_numpy(next_ob_no)
+
         vs = self.critic(ob_no)
         vs_p = self.critic(next_ob_no)
+
+        vs = ptu.to_numpy(vs)
+        vs_p = ptu.to_numpy(vs_p)
 
         q = re_n + self.gamma * vs_p * (1 - terminal_n)
         adv_n = q - vs

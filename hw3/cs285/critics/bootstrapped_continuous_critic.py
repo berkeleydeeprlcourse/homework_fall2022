@@ -89,6 +89,11 @@ class BootstrappedContinuousCritic(nn.Module, BaseCritic):
         # HINT: make sure to squeeze the output of the critic_network to ensure
         #       that its dimensions match the reward
 
+        next_ob_no = ptu.from_numpy(next_ob_no)
+        ob_no = ptu.from_numpy(ob_no)
+        terminal_n = ptu.from_numpy(terminal_n)
+        reward_n = ptu.from_numpy(reward_n)
+
         for i in range(self.num_target_updates):
             with torch.no_grad():
                 # a)

@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import time
 import copy
@@ -80,8 +82,6 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
         obs.append(ob)
         tp = time.time()
         ac = policy.get_action(ob)
-        if timesp is not None:
-            timesp.append(time.time() - tp)
 
         ac = ac[0]
         acs.append(ac)
@@ -93,9 +93,6 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
             warnings.simplefilter("ignore")
 
             ob, rew, done, truncated, _ = env.step(ac)
-
-        if times2 is not None:
-            times2.append(time.time() - t2)
 
         # record result of taking that action
         steps += 1
@@ -109,9 +106,6 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
 
         if rollout_done:
             break
-
-    if times is not None:
-        times.append(time.time() - t0)
 
     return Path(obs, image_obs, acs, rewards, next_obs, terminals)
 
@@ -130,7 +124,7 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
     paths = []
     while timesteps_this_batch < min_timesteps_per_batch:
         t0 = time.time()
-        path = sample_trajectory(env, policy, max_path_length, render, times=times, times2=times2, timesp=timesp)
+        path = sample_trajectory(env, policy, max_path_length, render)
         t1 = time.time()
         total_t += t1 - t0
 
