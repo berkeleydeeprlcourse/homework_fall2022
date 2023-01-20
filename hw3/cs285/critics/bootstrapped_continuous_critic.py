@@ -1,3 +1,5 @@
+import torch
+
 from .base_critic import BaseCritic
 from torch import nn
 from torch import optim
@@ -19,6 +21,7 @@ class BootstrappedContinuousCritic(nn.Module, BaseCritic):
         Note: batch self.size /n/ is defined at runtime.
         is None
     """
+
     def __init__(self, hparams):
         super().__init__()
         self.ob_dim = hparams['ob_dim']
@@ -85,5 +88,21 @@ class BootstrappedContinuousCritic(nn.Module, BaseCritic):
         #       to 0) when a terminal state is reached
         # HINT: make sure to squeeze the output of the critic_network to ensure
         #       that its dimensions match the reward
+
+        for i in range(self.num_target_updates):
+            with torch.no_grad():
+                # a)
+                v_sp = self.critic_network(next_ob_no).squeeze()
+                # b)
+                y = reward_n + self.gamma * v_sp * (1 - terminal_n)
+
+            for k in range(self.num_grad_steps_per_target_update):
+                loss = self.loss(self.critic_network(ob_no).squeeze(), y)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+        # loss = ptu.to_numpy(loss)
 
         return loss.item()
