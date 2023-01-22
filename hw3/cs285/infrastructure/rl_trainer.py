@@ -1,3 +1,4 @@
+import pdb
 from collections import OrderedDict
 import pickle
 import os
@@ -255,7 +256,7 @@ class RL_Trainer(object):
                     episode_return = 0
 
                 action = self.agent.actor.get_action(obs)[0]
-                next_obs, rew, done, _ = self.env.step(action)
+                next_obs, rew, done, trunc, _ = self.env.step(action)
 
                 episode_return += rew
 
@@ -339,6 +340,10 @@ class RL_Trainer(object):
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
             ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(
                 self.params['train_batch_size'])
+
+            # row vector to column vector
+            re_batch = re_batch.reshape(-1,1)
+            terminal_batch = terminal_batch.reshape(-1,1)
 
             train_log = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
@@ -490,11 +495,14 @@ class RL_Trainer(object):
             logs["Eval_MinReturn"] = np.min(eval_returns)
             logs["Eval_AverageEpLen"] = np.mean(eval_ep_lens)
 
-            logs["Train_AverageReturn"] = np.mean(stats['reward'])
-            logs["Train_StdReturn"] = np.std(stats['reward'])
-            logs["Train_MaxReturn"] = np.max(stats['reward'])
-            logs["Train_MinReturn"] = np.min(stats['reward'])
-            logs["Train_AverageEpLen"] = np.mean(stats['ep_len'])
+            if stats['reward']:
+                logs["Train_AverageReturn"] = np.mean(stats['reward'])
+                logs["Train_StdReturn"] = np.std(stats['reward'])
+                logs["Train_MaxReturn"] = np.max(stats['reward'])
+                logs["Train_MinReturn"] = np.min(stats['reward'])
+                logs["Train_AverageEpLen"] = np.mean(stats['ep_len'])
+            else:
+                print("Reward list is found to be empty!!!")
 
             logs["Train_EnvstepsSoFar"] = self.total_envsteps
             logs["TimeSinceStart"] = time.time() - self.start_time

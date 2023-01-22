@@ -108,6 +108,4 @@ class BootstrappedContinuousCritic(nn.Module, BaseCritic):
                 loss.backward()
                 self.optimizer.step()
 
-        # loss = ptu.to_numpy(loss)
-
         return loss.item()
