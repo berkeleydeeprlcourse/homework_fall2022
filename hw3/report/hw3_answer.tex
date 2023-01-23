@@ -69,7 +69,7 @@
     \includegraphics[scale=2]{q5/q5_half_cheetah}.
 
     After 150 iterations, HalfCheetah return is around 150, as expected.
-    After 20 iterations, HalfCheetah return should is above -40, as expected.
+    After 20 iterations, HalfCheetah return is above -40, as expected.
 
     \section{Part 3: Soft Actor-Critic}
 
@@ -79,5 +79,25 @@
 
     After 20000 steps, InvertedPendulum return is expected to reach 1000.
     Actually it is reached after 9k steps.
+
+    \subsection*{Question 6: Run soft actor-critic more difficult tasks}
+
+    The same parameters are used as stated in the question.
+    Additionally \textless num\_critic\_updates\_pe\_agent\_update\textgreater and \textless num\_acto\_updates\_per\_agent\_update\textgreater parameters are set to 10.
+
+    \includegraphics[scale=0.66]{q6/inverted_pendulum}.
+
+    After 10000 steps, InvertedPendulum return is expected to be near or above 100.
+    After 20000 steps, InvertedPendulum return is expected to reach 1000.
+    Our implementation reaches 1000 before 10K steps and stabilizes around 1000 after 10K steps.
+
+    \includegraphics[scale=0.66]{q6/halfcheatah}.
+
+    After 10000 steps, HalfCheetah return is expected to be above -40 (trending toward positive).
+    After 50000 steps, HalfCheetah return should be around 200.
+    Our implementation return is close to zero at 10K steps and is above 300 after 50K steps.
+
+
+
 
 \end{document}
