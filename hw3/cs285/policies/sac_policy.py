@@ -106,7 +106,7 @@ class MLPPolicySAC(MLPPolicy):
         obs = ptu.from_numpy(obs)
         dist = self(obs)
         a_tilda = dist.rsample()
-        log_prob = dist.log_prob(a_tilda)
+        log_prob = dist.log_prob(a_tilda).sum(-1, keepdim=True)
 
         actor_loss = -(torch.min(*critic(obs, a_tilda)) - self.alpha.detach() * log_prob).mean()
 

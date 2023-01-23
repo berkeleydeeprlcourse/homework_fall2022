@@ -341,10 +341,6 @@ class RL_Trainer(object):
             ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(
                 self.params['train_batch_size'])
 
-            # row vector to column vector
-            re_batch = re_batch.reshape(-1,1)
-            terminal_batch = terminal_batch.reshape(-1,1)
-
             train_log = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs

@@ -61,7 +61,7 @@ class SACAgent(BaseAgent):
 
         dist = self.actor(next_ob_no)
         next_action = dist.rsample()
-        log_prob = dist.log_prob(next_action)
+        log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
 
         min_q_t_pred = torch.min(*self.critic_target(next_ob_no, next_action))
         y_target = min_q_t_pred - self.actor.alpha.detach() * log_prob
@@ -78,6 +78,11 @@ class SACAgent(BaseAgent):
         return critic_loss.item()
 
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
+
+        # row vector to column vector
+        re_n = np.array(re_n).reshape(-1, 1)
+        terminal_n = np.array(terminal_n).reshape(-1, 1)
+
         self.training_step += 1
         # TODO 
         # 1. Implement the following pseudocode:
