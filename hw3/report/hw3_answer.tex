@@ -25,10 +25,13 @@
     \includegraphics[scale=0.8]{q1/packman-20M}
 
     After 20M iterations the learning curve looks like above.
-    It is taken from tensorboard.
     Relevant log files can be found under data folder.
 
-    Double Q network obtains better returns, as expected.
+    The reference Pac-Man implementation for 1 million steps gets a return of 1500 in this timeframe.
+    Our solution also gets the same returns.
+    After 20M steps the return reaches to 2800 and keeps the positive trend.
+    The test is conducted on a CPU machine for 2 days and interrupted early on.
+    If it were let to continue the results are expected to improve.
 
     \subsection*{Question 2: double Q-learning (DDQN)}
 
@@ -38,9 +41,40 @@
     Different seed results are averaged and the plot above is generated.
     combine\_results\_q2.py file is used to combine results.
 
+    Double Q network obtains better returns, as expected.
+    the double estimator improves the accuracy of the learned Q values.
+
+    Just like the reference solution with the default hyperparameters, our solution achieves around 150 reward after 350k timesteps, but there is considerable  variation between runs and without the double-Q trick the average return often decreases after reaching 150.
+
     \subsection*{Question 3: experimenting with hyperparameters}
 
-    TODO: solve this question
+    Three different hyper-parameters are selected and a different value is selected to test the impact on the accuracy of the model.
+    The test is conducted on Lander environment.
+    This test is actually an extension of the question 2 with different parameters and just the vanilla dqn is used.
+
+
+    First learning rate is multiplied by 10.
+    Increasing the learning rate may speed up learning.
+    In our case the results worsen which means the selected learning rate is too big.
+    Another test may be run using half of the selected learning rate.
+    The results are shown in the first column of the image.
+
+    In the second test exploration schedule is changed.
+    The exploration rate is started as 1 as in the default case.
+    It is decreased gradually to 0.01 over the half of the total steps and kept constant.
+    In this setting the training is expected to explore more and the returns are expected to improve.
+    However the accuracy worsens.
+    Maybe because the exploration rate is not enough.
+    Another test may be run using the default minimum exploration rate 0.2 for half the steps or more to see affect of more exploration.
+    The results are shown in the second column of the image.
+
+    In the second test number of layers decreased from 3 to 2, hence no hidden layer is used.
+    In this setting the returns reaches 150 without double dqn and keeps relatively stable.
+    This indicates a 3 layer network in this setting is not best fit for the problem and simplifying the architecture helps to improve the returns.
+    The results are shown in the third column of the image.
+
+    \hspace*{-0.5in}
+    \includegraphics[scale=1.5]{q3/q3}
 
     \section{Part 2: Actor-Critic}
 
@@ -72,6 +106,8 @@
     After 20 iterations, HalfCheetah return is above -40, as expected.
 
     \section{Part 3: Soft Actor-Critic}
+
+
 
     \subsection*{Question 6: Run soft actor-critic more difficult tasks}
 
