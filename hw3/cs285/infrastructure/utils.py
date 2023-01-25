@@ -118,9 +118,7 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
 
     total_t = 0
     timesteps_this_batch = 0
-    times = []
-    times2 = []
-    timesp = []
+
     paths = []
     while timesteps_this_batch < min_timesteps_per_batch:
         t0 = time.time()

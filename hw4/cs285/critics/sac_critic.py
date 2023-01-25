@@ -6,6 +6,7 @@ from cs285.infrastructure import pytorch_util as ptu
 from cs285.infrastructure import sac_utils
 import torch
 
+
 class SACCritic(nn.Module, BaseCritic):
     """
         Notes on notation:
@@ -20,6 +21,7 @@ class SACCritic(nn.Module, BaseCritic):
         Note: batch self.size /n/ is defined at runtime.
         is None
     """
+
     def __init__(self, hparams):
         super(SACCritic, self).__init__()
         self.ob_dim = hparams['ob_dim']
@@ -55,9 +57,14 @@ class SACCritic(nn.Module, BaseCritic):
         )
 
     def forward(self, obs: torch.Tensor, action: torch.Tensor):
-        # TODO: get this from previous HW
+        assert obs.size(0) == action.size(0)
+
+        # TODO: return the two q values
+        input = torch.cat([obs, action], dim=-1)
+
+        q1 = self.Q1(input)
+        q2 = self.Q2(input)
+
+        values = [q1, q2]
+
         return values
-
-
-
-        
