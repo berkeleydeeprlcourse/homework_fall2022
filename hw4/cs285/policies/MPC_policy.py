@@ -45,14 +45,21 @@ class MPCPolicy(BasePolicy):
         print(f"Using action sampling strategy: {self.sample_strategy}")
         if self.sample_strategy == 'cem':
             print(f"CEM params: alpha={self.cem_alpha}, "
-                + f"num_elites={self.cem_num_elites}, iterations={self.cem_iterations}")
+                  + f"num_elites={self.cem_num_elites}, iterations={self.cem_iterations}")
 
     def sample_action_sequences(self, num_sequences, horizon, obs=None):
         if self.sample_strategy == 'random' \
-            or (self.sample_strategy == 'cem' and obs is None):
+                or (self.sample_strategy == 'cem' and obs is None):
             # TODO(Q1) uniformly sample trajectories and return an array of
             # dimensions (num_sequences, horizon, self.ac_dim) in the range
             # [self.low, self.high]
+            rng = np.random.default_rng()
+            random_action_sequences = np.empty((num_sequences, horizon, self.ac_dim))
+            for n in range(num_sequences):
+                for h in range(horizon):
+                    for a in range(self.ac_dim):
+                        random_action_sequences[n, h, a] = rng.uniform(self.low[a], self.high[a]+1)
+
             return random_action_sequences
         elif self.sample_strategy == 'cem':
             # TODO(Q5): Implement action selection using CEM.
@@ -83,7 +90,7 @@ class MPCPolicy(BasePolicy):
         #
         # Then, return the mean predictions across all ensembles.
         # Hint: the return value should be an array of shape (N,)
-        for model in self.dyn_models: 
+        for model in self.dyn_models:
             pass
 
         return TODO

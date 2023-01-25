@@ -35,7 +35,7 @@ def perform_actions(env, actions):
     for ac in actions:
         obs.append(ob)
         acs.append(ac)
-        ob, rew, done, _ = env.step(ac)
+        ob, rew, done, trunc, _ = env.step(ac)
         # add the observation after taking a step to next_obs
         next_obs.append(ob)
         rewards.append(rew)
@@ -60,7 +60,9 @@ def sample_trajectory(env, policy, max_path_length, render=False):
     # TODO: get this from previous HW
 
     # initialize env for the beginning of a new rollout
-    ob = env.reset()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ob = env.reset()
 
     # init vars
     obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
