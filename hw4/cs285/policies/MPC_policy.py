@@ -149,12 +149,12 @@ class MPCPolicy(BasePolicy):
         # Hint: Remember that the model can process observations and actions
         #       in batch, which can be much faster than looping through each
         #       action sequence.
-        for n in range(self.N):
-            sequence = candidate_action_sequences[n]
-            predicted_obs = obs.reshape(1, -1)
-            for action in sequence:
-                action = action.reshape(1, -1)
-                sum_of_rewards[n] += self.env.get_reward(predicted_obs, action)[0]
-                predicted_obs = model.get_prediction(predicted_obs, action, self.data_statistics)
+        st = np.broadcast_to(obs, (self.N, len(obs)))
+        st.flags['WRITEABLE'] = True
+
+        for h in range(candidate_action_sequences.shape[1]):
+            sum_of_rewards += self.env.get_reward(st, candidate_action_sequences[:, h, :])[0]
+            st_next = model.get_prediction(st, candidate_action_sequences[:, h, :], self.data_statistics)
+            st = st_next
 
         return sum_of_rewards

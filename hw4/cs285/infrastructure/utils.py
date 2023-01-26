@@ -120,6 +120,7 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
     total_t = 0
     timesteps_this_batch = 0
     paths = []
+    sample_times = []
     while timesteps_this_batch < min_timesteps_per_batch:
         t0 = time.time()
         path = sample_trajectory(env, policy, max_path_length, render)
@@ -128,7 +129,9 @@ def sample_trajectories(env, policy, min_timesteps_per_batch, max_path_length, r
 
         paths.append(path)
         timesteps_this_batch += get_pathlength(path)
-    print(f"{total_t} seconds ")
+        sample_times.append(time.time() - t0)
+
+    print(f"Trajectory sample times {sample_times} ")
 
     return paths, timesteps_this_batch
 
