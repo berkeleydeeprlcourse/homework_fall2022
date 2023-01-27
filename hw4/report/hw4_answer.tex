@@ -52,6 +52,26 @@
 
     \section*{Problem 3}
 
+    MBRL algorithm with on-policy data collection and iterative model training.
+    Rl trainer.py already aggregates your collected data into a replay buffer.
+    Thus, iterative training means to just train on our growing replay buffer while collecting new data at each iteration using the most newly trained model.
 
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q3/obstacles}
+
+    Rewards of around -25 to -20 is expected for the obstacles env.
+    The actual results are similar.
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q3/reacher}
+
+    Rewards of around -250 to -300 is expected for the reacher env.
+    The actual results are similar.
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q3/cheetah}
+
+    Rewards of around 250 to 350 is expected for the cheetah env.
+    The actual results are similar.
 
 \end{document}

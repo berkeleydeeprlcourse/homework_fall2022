@@ -1,7 +1,7 @@
 import numpy as np
 
 from .base_policy import BasePolicy
-
+rng = np.random.default_rng()
 
 class MPCPolicy(BasePolicy):
 
@@ -53,14 +53,8 @@ class MPCPolicy(BasePolicy):
             # TODO(Q1) uniformly sample trajectories and return an array of
             # dimensions (num_sequences, horizon, self.ac_dim) in the range
             # [self.low, self.high]
-            rng = np.random.default_rng()
-            random_action_sequences = np.empty((num_sequences, horizon, self.ac_dim))
-            for n in range(num_sequences):
-                for h in range(horizon):
-                    for a in range(self.ac_dim):
-                        random_action_sequences[n, h, a] = rng.uniform(self.low[a], self.high[a] + 1)
 
-            return random_action_sequences
+            return rng.uniform(self.low, self.high, (num_sequences, horizon, self.ac_dim))
         elif self.sample_strategy == 'cem':
             # TODO(Q5): Implement action selection using CEM.
             # Begin with randomly selected actions, then refine the sampling distribution

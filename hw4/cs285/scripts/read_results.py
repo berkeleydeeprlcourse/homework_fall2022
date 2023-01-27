@@ -1,5 +1,9 @@
 import glob
+
+import numpy as np
 import tensorflow as tf
+from tensorflow.python.summary.summary_iterator import summary_iterator
+
 
 def get_section_results(file):
     """
@@ -7,20 +11,32 @@ def get_section_results(file):
     """
     X = []
     Y = []
-    for e in tf.train.summary_iterator(file):
+    E = []
+    T = []
+    time0 = None
+    for e in summary_iterator(file):
+        if time0 is None:
+            time0 = e.wall_time
         for v in e.summary.value:
             if v.tag == 'Train_EnvstepsSoFar':
                 X.append(v.simple_value)
             elif v.tag == 'Eval_AverageReturn':
                 Y.append(v.simple_value)
-    return X, Y
+                T.append(int(e.wall_time - time0))
+                time0 = e.wall_time
+            elif v.tag == 'Eval_StdReturn':
+                E.append(v.simple_value)
+    return X, Y, E, T
+
 
 if __name__ == '__main__':
     import glob
 
-    logdir = 'data/q1_lb_rtg_na_CartPole-v0_13-09-2020_23-32-10/events*'
-    eventfile = glob.glob(logdir)[0]
+    logdir = 'data/hw4_q3_reacher_reacher-cs285-v0_26-01-2023_21-50-00'
+    eventfile = glob.glob(logdir + "/events*")[0]
 
-    X, Y = get_section_results(eventfile)
-    for i, (x, y) in enumerate(zip(X, Y)):
-        print('Iteration {:d} | Train steps: {:d} | Return: {}'.format(i, int(x), y))
+    X, Y, E, T = get_section_results(eventfile)
+    for i, (x, y, e, t) in enumerate(zip(X, Y, E, T)):
+        print('{} Iteration {:d} | Train steps: {:d} | Return: {}, Std {}'.format(t, i, int(x), y, e))
+
+    np.savetxt(logdir + "/eval.txt", np.array([X, Y, E, T]))
