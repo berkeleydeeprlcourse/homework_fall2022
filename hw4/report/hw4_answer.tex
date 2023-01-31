@@ -74,4 +74,45 @@
     Rewards of around 250 to 350 is expected for the cheetah env.
     The actual results are similar.
 
+    \section*{Problem 4}
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q4/networks}
+
+    The chart above shows effect of ensemble size.
+    Increasing ensemble size improves average return but at the cost of training time.
+    Intermediate values proposes the best trade off.
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q4/actions}
+
+    Increasing action sequence count improved average return slightly.
+    Training time increases as well but the chart shows a mixed view.
+    A more reliable duration chart should incorporate average of multiple runs.
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q4/horizon}
+
+    Increasing action horizon improves average return but also increases variance.
+    The final difference is not too much.
+    The most apparent effect increasing the horizon is seems to be increasing the training speed.
+    Again the value is obtained using the intermediate values.
+
+    \section*{Problem 5}
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q5/random}
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q5/cem2}
+
+    \hspace*{-0.6in}
+    \includegraphics[scale=0.5]{q5/cem4}
+
+    The charts show the effect of using cem.
+    Using cem has a clear advantage over random sampling.
+    Iteration duration increases similarly.
+    4 iteration cem yields better return at the cost of dramatically longer iterations.
+    2 iteration cem provides better value by providing a better return/duration ratio.
+
 \end{document}
