@@ -17,8 +17,8 @@ class MBPOAgent(BaseAgent):
     def train(self, *args):
         return self.mb_agent.train(*args)
 
-    def train_sac(self, *args):
-        return self.sac_agent.train(*args)
+    def train_sac(self, sac_train_times, *args):
+        return self.sac_agent.train(sac_train_times, *args)
 
     def collect_model_trajectory(self, rollout_length=1):
         # TODO (Q6): Collect a trajectory of rollout_length from the learned 

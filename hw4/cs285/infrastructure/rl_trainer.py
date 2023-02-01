@@ -170,6 +170,7 @@ class RL_Trainer(object):
             if isinstance(self.agent, MBPOAgent):
                 model_trajectory_times = []
                 train_sac_times = []
+                train_sac_train_times = []
                 print("SAC training")
                 for _ in tqdm.tqdm(range(self.sac_params['n_iter']), desc="sac training loop"):
                     if self.params['mbpo_rollout_length'] > 0:
@@ -186,12 +187,13 @@ class RL_Trainer(object):
 
                     # train the SAC agent
                     time_sac_train = time.time()
-                    self.train_sac_agent()
+                    self.train_sac_agent(train_sac_train_times)
                     train_sac_times.append(time.time() - time_sac_train)
                     # print(f"a Sac training times {train_sac_times}")
 
                 print(f"Model collection times {model_trajectory_times}")
                 print(f"Sac training times {train_sac_times}")
+                print(f"Sac training training times {train_sac_train_times}")
 
             # if there is a model, log model predictions
             if isinstance(self.agent, MBAgent) and itr == 0:
@@ -259,13 +261,14 @@ class RL_Trainer(object):
 
         all_logs = []
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
-            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(self.params['train_batch_size'])
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(
+                self.params['train_batch_size'])
 
             train_log = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs
 
-    def train_sac_agent(self):
+    def train_sac_agent(self, sac_train_times):
         # TODO: Train the SAC component of the MBPO agent.
         # For self.sac_params['num_agent_train_steps_per_iter']:
         # 1) sample a batch of data of size self.sac_params['train_batch_size'] with self.agent.sample_sac
@@ -274,9 +277,10 @@ class RL_Trainer(object):
 
         all_logs = []
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
-            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample_sac(self.params['train_batch_size'])
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample_sac(
+                self.params['train_batch_size'])
 
-            train_log = self.agent.train_sac(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
+            train_log = self.agent.train_sac(sac_train_times, ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs
 
