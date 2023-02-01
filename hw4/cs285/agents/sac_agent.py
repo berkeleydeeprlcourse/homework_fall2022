@@ -118,6 +118,7 @@ class SACAgent(BaseAgent):
             times.append(0)
             times.append(0)
             times.append([])
+            times.append([])
 
         # row vector to column vector
         re_n = np.array(re_n).reshape(-1, 1)
@@ -152,7 +153,7 @@ class SACAgent(BaseAgent):
         actor_loss, alpha_loss, alpha = 0.0, 0.0, 0.0
         if self.training_step % self.actor_update_frequency == 0:
             for i in range(self.agent_params['num_actor_updates_per_agent_update']):
-                actor_loss, alpha_loss, alpha = self.actor.update(ob_no, self.critic)
+                actor_loss, alpha_loss, alpha = self.actor.update(times[4], ob_no, self.critic)
         times[2] += time.time() - t2
 
         # 4. gather losses for logging

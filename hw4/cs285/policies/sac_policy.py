@@ -1,3 +1,5 @@
+import time
+
 from cs285.infrastructure.sac_utils import SquashedNormal
 from cs285.policies.MLP_policy import MLPPolicy
 import torch
@@ -100,24 +102,60 @@ class MLPPolicySAC(MLPPolicy):
 
         return action_distribution
 
-    def update(self, obs, critic):
+    def update(self, times, obs, critic):
         # TODO Update actor network and entropy regularizer
         # return losses and alpha value
+
+        if len(times) == 0:
+            times.append(0)
+            times.append(0)
+            times.append(0)
+            times.append(0)
+            times.append(0)
+            times.append(0)
+            times.append(0)
+            times.append(0)
+            times.append(0)
+
+        t0 = time.time()
         obs = ptu.from_numpy(obs)
+        times[0] += time.time() - t0
+
+        t1 = time.time()
         dist = self(obs)
+        times[1] += time.time() - t1
+
+        t2 = time.time()
         a_tilda = dist.rsample()
+        times[2] += time.time() - t2
+
+        t3 = time.time()
         log_prob = dist.log_prob(a_tilda).sum(-1, keepdim=True)
+        times[3] += time.time() - t3
 
-        actor_loss = -(torch.min(*critic(obs, a_tilda)) - self.alpha.detach() * log_prob).mean()
+        t4 = time.time()
+        critic_pred = critic(obs, a_tilda)
+        times[4] += time.time() - t4
 
+        t5 = time.time()
+        actor_loss = -(torch.min(*critic_pred) - self.alpha.detach() * log_prob).mean()
+        times[5] += time.time() - t5
+
+        t6 = time.time()
         self.optimizer.zero_grad()
         actor_loss.backward()
         self.optimizer.step()
+        times[6] += time.time() - t6
 
-        self.log_alpha_optimizer.zero_grad()
+        t7 = time.time()
         alpha_loss = -(self.alpha * (log_prob + self.target_entropy).detach()).mean()
+        times[7] += time.time() - t7
+
+        t8 = time.time()
+        self.log_alpha_optimizer.zero_grad()
         alpha_loss.backward()
         self.log_alpha_optimizer.step()
+        times[8] += time.time() - t8
 
         actor_loss = actor_loss.item()
         alpha_loss = alpha_loss.item()
