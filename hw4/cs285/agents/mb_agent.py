@@ -3,6 +3,7 @@ from cs285.models.ff_model import FFModel
 from cs285.policies.MPC_policy import MPCPolicy
 from cs285.infrastructure.replay_buffer import ReplayBuffer
 from cs285.infrastructure.utils import *
+from ..infrastructure.pytorch_util import from_numpy, to_numpy
 
 
 class MBAgent(BaseAgent):
@@ -51,8 +52,8 @@ class MBAgent(BaseAgent):
             # you might find the num_data_per_env variable defined above useful
 
             observations = ob_no[i * num_data_per_ens:(i + 1) * num_data_per_ens]
-            actions =  ac_na[i * num_data_per_ens:(i + 1) * num_data_per_ens]
-            next_observations =  next_ob_no[i * num_data_per_ens:(i + 1) * num_data_per_ens]
+            actions = ac_na[i * num_data_per_ens:(i + 1) * num_data_per_ens]
+            next_observations = next_ob_no[i * num_data_per_ens:(i + 1) * num_data_per_ens]
 
             # use datapoints to update one of the dyn_models
             model = self.dyn_models[i]
@@ -91,3 +92,22 @@ class MBAgent(BaseAgent):
         # so each model in our ensemble can get trained on batch_size data
         return self.replay_buffer.sample_random_data(
             batch_size * self.ensemble_size)
+
+    def get_average_prediction(self, obs, acs):
+        data_statistics = self.data_statistics
+
+        delta_sum = np.zeros_like(obs)
+        for model in self.dyn_models:
+            delta = model(obs, acs, data_statistics["obs_mean"], data_statistics["obs_std"],
+                               data_statistics["acs_mean"], data_statistics["acs_std"],
+                               data_statistics['delta_mean'], data_statistics['delta_std'])[1]
+
+            delta_sum += to_numpy(delta)
+
+        delta_pred_normalized = delta_sum / len(self.dyn_models)
+        delta_mean = data_statistics['delta_mean']
+        delta_std = data_statistics['delta_std']
+
+        next_obs_pred = (delta_pred_normalized * delta_std + delta_mean) + obs
+
+        return next_obs_pred

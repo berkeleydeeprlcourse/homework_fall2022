@@ -4,6 +4,7 @@ from .mb_agent import MBAgent
 from cs285.infrastructure.replay_buffer import ReplayBuffer
 from cs285.infrastructure.utils import *
 
+
 class MBPOAgent(BaseAgent):
     def __init__(self, env, agent_params):
         super(MBPOAgent, self).__init__()
@@ -15,7 +16,7 @@ class MBPOAgent(BaseAgent):
 
     def train(self, *args):
         return self.mb_agent.train(*args)
-    
+
     def train_sac(self, *args):
         return self.sac_agent.train(*args)
 
@@ -24,20 +25,23 @@ class MBPOAgent(BaseAgent):
         # dynamics model. Start from a state sampled from the replay buffer.
 
         # sample 1 transition from self.mb_agent.replay_buffer
-        ob, _, _, _, terminal = TODO
+        # ob, _, _, _, terminal = TODO
+        path = self.mb_agent.replay_buffer.sample_random_data(1)
+        ob, _, _, _, terminal = path
 
         obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
         for _ in range(rollout_length):
             # get the action from the policy
-            ac = TODO
-            
+            # ac = TODO
+            ac = self.sac_agent.actor.get_action(ob[0])
+
             # determine the next observation by averaging the prediction of all the 
             # dynamics models in the ensemble
-            next_ob = TODO
+            next_ob = self.mb_agent.get_average_prediction(ob, ac)
 
             # query the reward function to determine the reward of this transition
             # HINT: use self.env.get_reward
-            rew, _ = TODO
+            rew, _ = self.env.get_reward(ob, ac)
 
             obs.append(ob[0])
             acs.append(ac[0])

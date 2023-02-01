@@ -5,6 +5,7 @@ import sys
 import time
 
 import gym
+import tqdm
 from gym import wrappers
 import numpy as np
 import torch
@@ -103,8 +104,7 @@ class RL_Trainer(object):
         agent_class = self.params['agent_class']
         self.agent = agent_class(self.env, self.params['agent_params'])
 
-    def run_training_loop(self, n_iter, collect_policy, eval_policy,
-                          initial_expertdata=None):
+    def run_training_loop(self, n_iter, collect_policy, eval_policy, initial_expertdata=None):
         """
         :param n_iter:  number of (dagger) iterations
         :param collect_policy:
@@ -168,15 +168,30 @@ class RL_Trainer(object):
 
             # if doing MBPO, train the model free component
             if isinstance(self.agent, MBPOAgent):
-                for _ in range(self.sac_params['n_iter']):
+                model_trajectory_times = []
+                train_sac_times = []
+                print("SAC training")
+                for _ in tqdm.tqdm(range(self.sac_params['n_iter']), desc="sac training loop"):
                     if self.params['mbpo_rollout_length'] > 0:
                         # TODO(Q6): Collect trajectory of length self.params['mbpo_rollout_length'] from the 
                         # learned dynamics model. Add this trajectory to the correct replay buffer.
                         # HINT: Look at collect_model_trajectory and add_to_replay_buffer from MBPOAgent.
                         # HINT: Use the from_model argument to ensure the paths are added to the correct buffer.
-                        pass
+                        time_m_trj = time.time()
+                        model_trajectory = self.agent.collect_model_trajectory(self.params['mbpo_rollout_length'])
+                        self.agent.add_to_replay_buffer(model_trajectory, True)
+                        model_trajectory_times.append(time.time() - time_m_trj)
+
+                        # print(f"a Model collection times {model_trajectory_times}")
+
                     # train the SAC agent
+                    time_sac_train = time.time()
                     self.train_sac_agent()
+                    train_sac_times.append(time.time() - time_sac_train)
+                    # print(f"a Sac training times {train_sac_times}")
+
+                print(f"Model collection times {model_trajectory_times}")
+                print(f"Sac training times {train_sac_times}")
 
             # if there is a model, log model predictions
             if isinstance(self.agent, MBAgent) and itr == 0:
@@ -244,8 +259,7 @@ class RL_Trainer(object):
 
         all_logs = []
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
-            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(
-                self.params['train_batch_size'])
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(self.params['train_batch_size'])
 
             train_log = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
@@ -257,7 +271,14 @@ class RL_Trainer(object):
         # 1) sample a batch of data of size self.sac_params['train_batch_size'] with self.agent.sample_sac
         # 2) train the SAC agent self.agent.train_sac
         # HINT: This will look similar to train_agent above.
-        pass
+
+        all_logs = []
+        for train_step in range(self.params['num_agent_train_steps_per_iter']):
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample_sac(self.params['train_batch_size'])
+
+            train_log = self.agent.train_sac(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
+            all_logs.append(train_log)
+        return all_logs
 
     ####################################
     ####################################
