@@ -63,47 +63,52 @@ class SACAgent(BaseAgent):
             times.append(0)
             times.append(0)
             times.append(0)
+            times.append(0)
 
-        t6 = time.time()
+        t0 = time.time()
         next_ob_no = ptu.from_numpy(next_ob_no)
         terminal_n = ptu.from_numpy(terminal_n)
         re_n = ptu.from_numpy(re_n)
         ac_na = ptu.from_numpy(ac_na)
         ob_no = ptu.from_numpy(ob_no)
-        times[6] += time.time() - t6
-
-        t0 = time.time()
-        dist = self.actor(next_ob_no)
-        times[0] += time.time()-t0
+        times[0] += time.time() - t0
 
         t1 = time.time()
-        next_action = dist.rsample()
-        times[1] += time.time() - t1
+        dist = self.actor(next_ob_no)
+        times[1] += time.time()-t1
 
         t2 = time.time()
-        log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
+        next_action = dist.rsample()
         times[2] += time.time() - t2
 
-        t7 = time.time()
-        min_q_t_pred = torch.min(*self.critic_target(next_ob_no, next_action))
-        y_target = min_q_t_pred - self.actor.alpha.detach() * log_prob
-
-        y = re_n + self.gamma * (1 - terminal_n) * y_target
-        times[7] += time.time() - t7
-
         t3 = time.time()
-        q1, q2 = self.critic(ob_no, ac_na)
+        log_prob = dist.log_prob(next_action).sum(-1, keepdim=True)
         times[3] += time.time() - t3
 
         t4 = time.time()
-        critic_loss = self.critic.loss(q1, y.detach()) + self.critic.loss(q2, y.detach())
+        targets = self.critic_target(next_ob_no, next_action)
         times[4] += time.time() - t4
 
         t5 = time.time()
+        min_q_t_pred = torch.min(*targets)
+        y_target = min_q_t_pred - self.actor.alpha.detach() * log_prob
+
+        y = re_n + self.gamma * (1 - terminal_n) * y_target
+        times[5] += time.time() - t5
+
+        t6 = time.time()
+        q1, q2 = self.critic(ob_no, ac_na)
+        times[6] += time.time() - t6
+
+        t7 = time.time()
+        critic_loss = self.critic.loss(q1, y.detach()) + self.critic.loss(q2, y.detach())
+        times[7] += time.time() - t7
+
+        t8 = time.time()
         self.critic.optimizer.zero_grad()
         critic_loss.backward()
         self.critic.optimizer.step()
-        times[5] += time.time() - t5
+        times[8] += time.time() - t8
 
         return critic_loss.item()
 
