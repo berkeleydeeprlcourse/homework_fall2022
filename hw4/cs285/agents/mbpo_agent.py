@@ -17,8 +17,8 @@ class MBPOAgent(BaseAgent):
     def train(self, *args):
         return self.mb_agent.train(*args)
 
-    def train_sac(self, sac_train_times, *args):
-        return self.sac_agent.train(sac_train_times, *args)
+    def train_sac(self, *args):
+        return self.sac_agent.train(*args)
 
     def collect_model_trajectory(self, rollout_length=1):
         # TODO (Q6): Collect a trajectory of rollout_length from the learned 
@@ -26,8 +26,7 @@ class MBPOAgent(BaseAgent):
 
         # sample 1 transition from self.mb_agent.replay_buffer
         # ob, _, _, _, terminal = TODO
-        path = self.mb_agent.replay_buffer.sample_random_data(1)
-        ob, _, _, _, terminal = path
+        ob, _, _, _, terminal = self.mb_agent.replay_buffer.sample_random_data(1)
 
         obs, acs, rewards, next_obs, terminals, image_obs = [], [], [], [], [], []
         for _ in range(rollout_length):

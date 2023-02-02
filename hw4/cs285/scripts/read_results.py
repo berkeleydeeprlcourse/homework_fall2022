@@ -38,7 +38,7 @@ def read_log_dir(logdir):
 
 
 if __name__ == '__main__':
-    log_dirs = glob.glob("data/hw4_q4_reacher*")
+    log_dirs = glob.glob("data/hw4_q6_cheetah*")
 
     for logdir in log_dirs:
         read_log_dir(logdir)

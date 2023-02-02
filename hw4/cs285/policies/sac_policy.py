@@ -40,8 +40,7 @@ class MLPPolicySAC(MLPPolicy):
     @property
     def alpha(self):
         # TODO: Formulate entropy term
-        entropy = self.log_alpha.exp()
-        return entropy
+        return self.log_alpha.exp()
 
     def get_action(self, obs: np.ndarray, sample=True) -> np.ndarray:
         # TODO: return sample from distribution if sampling
@@ -53,7 +52,6 @@ class MLPPolicySAC(MLPPolicy):
             observation = obs[None]
 
         # TODO return the action that the policy prescribes
-        # with torch.no_grad():
         observation = ptu.from_numpy(observation)
         distribution = self(observation)
 
@@ -63,10 +61,8 @@ class MLPPolicySAC(MLPPolicy):
             action = distribution.mean
 
         action = action.clamp(*self.action_range)
-        # assert action.ndim == 2 and action.shape[0] == 1
-
-        # action = action[0]
         action = ptu.to_numpy(action)
+
         return action
 
     # This function defines the forward pass of the network.
@@ -85,14 +81,11 @@ class MLPPolicySAC(MLPPolicy):
             raise Exception("Discrete action space not implemented yet!")
 
         batch_mean = self.mean_net(observation)
-        batch_dim = batch_mean.shape[0]
 
         # clip log values
         log_std = torch.tanh(self.logstd)
         log_std = log_std.clamp(*self.log_std_bounds)
         std = torch.exp(log_std)
-        # scale_tril = torch.diag(std)
-        # batch_scale_tril = scale_tril.repeat(batch_dim, 1, 1)
 
         # SquashedNormal from sac_utils file
         action_distribution = SquashedNormal(
@@ -102,60 +95,26 @@ class MLPPolicySAC(MLPPolicy):
 
         return action_distribution
 
-    def update(self, times, obs, critic):
+    def update(self, obs, critic):
         # TODO Update actor network and entropy regularizer
         # return losses and alpha value
-
-        if len(times) == 0:
-            times.append(0)
-            times.append(0)
-            times.append(0)
-            times.append(0)
-            times.append(0)
-            times.append(0)
-            times.append(0)
-            times.append(0)
-            times.append(0)
-
-        t0 = time.time()
         obs = ptu.from_numpy(obs)
-        times[0] += time.time() - t0
 
-        t1 = time.time()
         dist = self(obs)
-        times[1] += time.time() - t1
-
-        t2 = time.time()
         a_tilda = dist.rsample()
-        times[2] += time.time() - t2
-
-        t3 = time.time()
         log_prob = dist.log_prob(a_tilda).sum(-1, keepdim=True)
-        times[3] += time.time() - t3
-
-        t4 = time.time()
         critic_pred = critic(obs, a_tilda)
-        times[4] += time.time() - t4
 
-        t5 = time.time()
         actor_loss = -(torch.min(*critic_pred) - self.alpha.detach() * log_prob).mean()
-        times[5] += time.time() - t5
+        alpha_loss = -(self.alpha * (log_prob + self.target_entropy).detach()).mean()
 
-        t6 = time.time()
         self.optimizer.zero_grad()
         actor_loss.backward()
         self.optimizer.step()
-        times[6] += time.time() - t6
 
-        t7 = time.time()
-        alpha_loss = -(self.alpha * (log_prob + self.target_entropy).detach()).mean()
-        times[7] += time.time() - t7
-
-        t8 = time.time()
         self.log_alpha_optimizer.zero_grad()
         alpha_loss.backward()
         self.log_alpha_optimizer.step()
-        times[8] += time.time() - t8
 
         actor_loss = actor_loss.item()
         alpha_loss = alpha_loss.item()

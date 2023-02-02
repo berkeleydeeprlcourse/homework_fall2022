@@ -1,23 +1,19 @@
-from collections import OrderedDict
 import pickle
-import os
-import sys
 import time
+from collections import OrderedDict
 
 import gym
-import tqdm
-from gym import wrappers
 import numpy as np
 import torch
+import tqdm
 
 from cs285.agents.mb_agent import MBAgent
 from cs285.agents.mbpo_agent import MBPOAgent
+# register all of our envs
+from cs285.envs import register_envs
 from cs285.infrastructure import pytorch_util as ptu
 from cs285.infrastructure import utils
 from cs285.infrastructure.logger import Logger
-
-# register all of our envs
-from cs285.envs import register_envs
 from cs285.infrastructure.utils import sample_trajectories
 
 register_envs()
@@ -168,32 +164,19 @@ class RL_Trainer(object):
 
             # if doing MBPO, train the model free component
             if isinstance(self.agent, MBPOAgent):
-                model_trajectory_times = []
-                train_sac_times = []
-                train_sac_train_times = []
-                print("SAC training")
-                for _ in tqdm.tqdm(range(self.sac_params['n_iter']), desc="sac training loop"):
+                time_sac_train = time.time()
+                for _ in tqdm.tqdm(range(self.sac_params['n_iter']), desc="Sac training loop"):
                     if self.params['mbpo_rollout_length'] > 0:
                         # TODO(Q6): Collect trajectory of length self.params['mbpo_rollout_length'] from the 
                         # learned dynamics model. Add this trajectory to the correct replay buffer.
                         # HINT: Look at collect_model_trajectory and add_to_replay_buffer from MBPOAgent.
                         # HINT: Use the from_model argument to ensure the paths are added to the correct buffer.
-                        time_m_trj = time.time()
                         model_trajectory = self.agent.collect_model_trajectory(self.params['mbpo_rollout_length'])
                         self.agent.add_to_replay_buffer(model_trajectory, True)
-                        model_trajectory_times.append(time.time() - time_m_trj)
-
-                        # print(f"a Model collection times {model_trajectory_times}")
 
                     # train the SAC agent
-                    time_sac_train = time.time()
-                    self.train_sac_agent(train_sac_train_times)
-                    train_sac_times.append(time.time() - time_sac_train)
-                    # print(f"a Sac training times {train_sac_times}")
-
-                print(f"Model collection times {model_trajectory_times}")
-                print(f"Sac training times {train_sac_times}")
-                print(f"Sac training training times {train_sac_train_times}")
+                    self.train_sac_agent()
+                print(f"Sac training completed in {time.time() - time_sac_train} seconds")
 
             # if there is a model, log model predictions
             if isinstance(self.agent, MBAgent) and itr == 0:
@@ -210,11 +193,12 @@ class RL_Trainer(object):
 
             print(f"Interation completed in {time.time() - time_iter} seconds")
 
+        print(f"Training loop completed in {time.time() - self.start_time} seconds")
+
     ####################################
     ####################################
 
-    def collect_training_trajectories(self, itr, initial_expertdata, collect_policy, num_transitions_to_sample,
-                                      save_expert_data_to_disk=False):
+    def collect_training_trajectories(self, itr, initial_expertdata, collect_policy, num_transitions_to_sample, save_expert_data_to_disk=False):
         """
         :param itr:
         :param load_initial_expertdata:  path to expert data pkl file
@@ -242,8 +226,7 @@ class RL_Trainer(object):
         # HINT2: you want each of these collected rollouts to be of length self.params['ep_len']
         print("\nCollecting data to be used for training...")
         t0 = time.time()
-        paths, envsteps_this_batch = sample_trajectories(self.env, collect_policy, self.params['batch_size'],
-                                                         self.params['ep_len'])
+        paths, envsteps_this_batch = sample_trajectories(self.env, collect_policy, num_transitions_to_sample, self.params['ep_len'])
         print(f"\nCollected data to be used for training in {time.time() - t0} s")
 
         # collect more rollouts with the same policy, to be saved as videos in tensorboard
@@ -261,14 +244,13 @@ class RL_Trainer(object):
 
         all_logs = []
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
-            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(
-                self.params['train_batch_size'])
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(self.params['train_batch_size'])
 
             train_log = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs
 
-    def train_sac_agent(self, sac_train_times):
+    def train_sac_agent(self):
         # TODO: Train the SAC component of the MBPO agent.
         # For self.sac_params['num_agent_train_steps_per_iter']:
         # 1) sample a batch of data of size self.sac_params['train_batch_size'] with self.agent.sample_sac
@@ -276,11 +258,10 @@ class RL_Trainer(object):
         # HINT: This will look similar to train_agent above.
 
         all_logs = []
-        for train_step in range(self.params['num_agent_train_steps_per_iter']):
-            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample_sac(
-                self.params['train_batch_size'])
+        for train_step in range(self.sac_params['num_agent_train_steps_per_iter']):
+            ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample_sac(self.params['train_batch_size'])
 
-            train_log = self.agent.train_sac(sac_train_times, ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
+            train_log = self.agent.train_sac(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
         return all_logs
 
