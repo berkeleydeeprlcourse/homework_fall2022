@@ -47,7 +47,15 @@ def build_mlp(
 
     # TODO: return a MLP. This should be an instance of nn.Module
     # Note: nn.Sequential is an instance of nn.Module.
-    raise NotImplementedError
+    backbone = [nn.Linear(size, size), activation] * (n_layers - 1)
+    net = nn.Sequential(
+        nn.Linear(input_size, size), activation,
+        *backbone,
+        nn.Linear(size, output_size),
+        output_activation
+    )
+    return net
+
 
 
 device = None
